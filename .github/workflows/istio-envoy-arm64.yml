@@ -1,0 +1,45 @@
+name: istio-envoy-arm64
+
+on:
+  push:
+    branch: master
+    paths:
+      - '.github/workflows/istio-envoy.yml'
+      - 'istio-envoy/**'
+
+jobs:
+  build:
+    runs-on: [self-hosted, linux, ARM64]
+    steps:
+      - uses: actions/checkout@v2
+      - run: make -e TAG=${GITHUB_REF##*/} build
+      - id: bin
+        run: |
+          make -e TAG=${GITHUB_REF##*/} drop-bin
+          echo "::set-output name=version::$(cat istio-envoy/.version)"
+          echo "::set-output name=envoy_version::$(cat ./envoy/envoy-version)"
+      - uses: actions/create-release@v1
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.bin.outputs.version }}
+          release_name: Release ${{ steps.bin.outputs.version }}
+          draft: true
+          prerelease: false
+      - uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_name: envoy
+          asset_path: ./envoy/envoy
+          asset_content_type: application/octet-stream
+      - uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_name:  ${{ steps.bin.outputs.envoy_version }}
+          asset_path: ./envoy/envoy-version
+          asset_content_type: text/plain

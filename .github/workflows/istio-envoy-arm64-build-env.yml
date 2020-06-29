@@ -1,0 +1,15 @@
+name: istio-envoy-arm64-build-env
+
+on:
+  push:
+    branch: master
+    paths:
+      - '.github/workflows/istio-envoy.yml'
+      - 'build-env/**'
+
+jobs:
+  build:
+    runs-on: [self-hosted, linux, ARM64]
+    steps:
+      - uses: actions/checkout@v2
+      - run: make -e TAG=${{ github.sha }} build-build-env
