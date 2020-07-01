@@ -12,10 +12,10 @@ jobs:
     runs-on: [self-hosted, linux, ARM64]
     steps:
       - uses: actions/checkout@v2
-      - run: make -e TAG=${GITHUB_REF##*/} build
+      - run: make build
       - id: bin
         run: |
-          make -e TAG=${GITHUB_REF##*/} drop-bin
+          make drop-bin
           echo "::set-output name=version::$(cat istio-envoy/.version)"
           echo "::set-output name=envoy_version::$(cat ./envoy/envoy-version)"
       - uses: actions/create-release@v1

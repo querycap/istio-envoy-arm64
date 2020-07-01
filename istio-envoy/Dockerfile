@@ -17,6 +17,8 @@ WORKDIR /go/src/proxy
 
 RUN set -eux; \
     \
+    sed -i -e 's/ENVOY_ORG = "istio-private"/ENVOY_ORG = "istio"/g' WORKSPACE; \
+    \
     export JAVA_HOME="$(dirname $(dirname $(realpath $(which javac))))"; \
     export BAZEL_BUILD_ARGS="--sandbox_debug --verbose_failures --define=ABSOLUTE_JAVABASE=${JAVA_HOME} --javabase=@bazel_tools//tools/jdk:absolute_javabase --host_javabase=@bazel_tools//tools/jdk:absolute_javabase --java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla"; \
     make build_envoy; \
