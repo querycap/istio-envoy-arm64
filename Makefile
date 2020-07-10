@@ -6,7 +6,7 @@ build:
 	docker buildx build \
 		--push \
 		--build-arg VERSION=${VERSION} \
-		--tag ${HUB}/istio-enovy-arm64:${TAG} \
+		--tag ${HUB}/istio-enovy-arm64:${VERSION} \
 		--platform linux/arm64 \
 		--file istio-envoy/Dockerfile .
 
@@ -19,7 +19,7 @@ build-build-env:
 		--file build-env/Dockerfile .
 
 drop-bin:
-	docker cp $(shell docker run -dit --rm ${HUB}/istio-enovy-arm64:${TAG}):/envoy ${PWD}/envoy
+	docker cp $(shell docker run -dit --rm ${HUB}/istio-enovy-arm64:${VERSION}):/envoy ${PWD}/envoy
 
 version:
 	docker run -it --entrypoint=/usr/local/bin/envoy istio/proxyv2:${VERSION} --version | grep version | sed -e 's/.*version\: //g' > istio-envoy/.envoy-version
