@@ -7,11 +7,7 @@ WORKDIR /go/src
 RUN gn --version && bazel --version && ninja --version && clang++ --version
 
 # clone istio/proxy
-RUN set -eux; \
-    \
-    git clone https://github.com/istio/proxy /go/src/proxy; \
-    cd /go/src/proxy; \
-    git checkout ${VERSION};
+RUN git clone --depth 1 -b ${VERSION} https://github.com/istio/proxy /go/src/proxy
 
 WORKDIR /go/src/proxy
 
