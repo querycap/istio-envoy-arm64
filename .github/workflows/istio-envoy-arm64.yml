@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    runs-on: [self-hosted, linux, ARM64]
+    runs-on: [ self-hosted, linux, ARM64 ]
     steps:
       - uses: actions/checkout@v2
       - uses: docker/setup-qemu-action@master
@@ -20,11 +20,14 @@ jobs:
           ${{ secrets.DOCKER_CONFIG }}
           EOF
       - run: make build
+  release:
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
       - id: bin
-        run: |
-          make drop-bin
-          echo "::set-output name=version::$(cat istio-envoy/.version)"
-          echo "::set-output name=envoy_version::$(cat ./envoy/envoy-version)"
+        run: make drop-bin
       - uses: actions/create-release@v1
         id: create_release
         env:
@@ -32,6 +35,10 @@ jobs:
         with:
           tag_name: ${{ steps.bin.outputs.version }}
           release_name: Release ${{ steps.bin.outputs.version }}
+          body: |
+            **Istio Version**: ${{ steps.bin.outputs.version }}
+            **Istio Envoy Expect Version**: ${{ steps.bin.outputs.envoy_expect_version }}
+            **Istio Envoy Actual Version**: ${{ steps.bin.outputs.envoy_actual_version }}
           draft: true
           prerelease: false
       - uses: actions/upload-release-asset@v1
@@ -42,11 +49,3 @@ jobs:
           asset_name: envoy
           asset_path: ./envoy/envoy
           asset_content_type: application/octet-stream
-      - uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_name:  ${{ steps.bin.outputs.envoy_version }}
-          asset_path: ./envoy/envoy-version
-          asset_content_type: text/plain

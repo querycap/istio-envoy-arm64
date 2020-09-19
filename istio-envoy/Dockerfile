@@ -13,9 +13,8 @@ WORKDIR /go/src/proxy
 
 RUN set -eux; \
     \
-    sed -i -e 's/ENVOY_ORG = "istio-private"/ENVOY_ORG = "istio"/g' WORKSPACE; \
-    \
-    export JAVA_HOME="$(dirname $(dirname $(realpath $(which javac))))"; \
+    export ENVOY_ORG=istio; \
+    export JAVA_HOME=$(dirname $(dirname $(realpath $(which javac)))); \
     export BAZEL_BUILD_ARGS="--sandbox_debug --verbose_failures --define=ABSOLUTE_JAVABASE=${JAVA_HOME} --javabase=@bazel_tools//tools/jdk:absolute_javabase --host_javabase=@bazel_tools//tools/jdk:absolute_javabase --java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla"; \
     make build_envoy; \
     mkdir -p /envoy; \
@@ -23,7 +22,7 @@ RUN set -eux; \
 
 RUN /envoy/envoy --version | grep version | sed -e 's/.*version\: //g' > /envoy/envoy-version
 
-FROM discolix/cc
+FROM busybox
 
 COPY --from=builder /envoy/envoy /envoy/envoy
 COPY --from=builder /envoy/envoy-version /envoy/envoy-version
