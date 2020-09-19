@@ -39,8 +39,8 @@ jobs:
             **Istio Version**: ${{ steps.bin.outputs.version }}
             **Istio Envoy Expect Version**: ${{ steps.bin.outputs.envoy_expect_version }}
             **Istio Envoy Actual Version**: ${{ steps.bin.outputs.envoy_actual_version }}
-          draft: true
-          prerelease: false
+          draft: false
+          prerelease: true
       - uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
