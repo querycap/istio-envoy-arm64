@@ -6,12 +6,12 @@ build:
 	docker buildx build \
 		--push \
 		--build-arg VERSION=$(VERSION) \
-		--tag $(HUB)/istio-enovy-arm64:$(VERSION) \
+		--tag $(HUB)/istio-envoy-arm64:$(VERSION) \
 		--platform linux/arm64 \
 		--file istio-envoy/Dockerfile .
 
 drop-bin:
-	docker cp $(shell docker create $(HUB)/istio-enovy-arm64:$(VERSION)):/envoy/ ${PWD}
+	docker cp $(shell docker create $(HUB)/istio-envoy-arm64:$(VERSION)):/envoy/ ${PWD}
 	$(MAKE) set-output
 
 set-output:
