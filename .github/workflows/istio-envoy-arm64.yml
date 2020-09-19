@@ -4,7 +4,7 @@ on:
   push:
     branch: master
     paths:
-      - '.github/workflows/istio-envoy.yml'
+      - '.github/workflows/istio-envoy-arm64.yml'
       - 'istio-envoy/**'
 
 jobs:
@@ -12,8 +12,8 @@ jobs:
     runs-on: [ self-hosted, linux, ARM64 ]
     steps:
       - uses: actions/checkout@v2
-      - uses: docker/setup-qemu-action@master
-      - uses: docker/setup-buildx-action@master
+      - uses: docker/setup-qemu-action@v1
+      - uses: docker/setup-buildx-action@v1
       - name: docker login
         run: |
           cat > ~/.docker/config.json << EOF
@@ -39,8 +39,8 @@ jobs:
             **Istio Version**: ${{ steps.bin.outputs.version }}
             **Istio Envoy Expect Version**: ${{ steps.bin.outputs.envoy_expect_version }}
             **Istio Envoy Actual Version**: ${{ steps.bin.outputs.envoy_actual_version }}
-          draft: false
-          prerelease: true
+          draft: true
+          prerelease: false
       - uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
