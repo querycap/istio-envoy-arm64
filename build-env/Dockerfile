@@ -49,7 +49,7 @@ RUN set -eux; \
     rm -rf /tmp/jdk; \
     rm -rf /var/lib/apt/lists/*
 
-FROM ubuntu:18.04
+FROM ubuntu:18.10
 
 ENV DEBIAN_FRONTEND noninteractive
 
