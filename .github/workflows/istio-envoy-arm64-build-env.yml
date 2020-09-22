@@ -18,4 +18,4 @@ jobs:
         with:
           password: ${{ secrets.DOCKER_PASSWORD }}
           username: ${{ secrets.DOCKER_USERNAME }}
-      - run: make -e TAG=${{ github.sha }} build-build-env
+      - run: make -e TAG=$(cat ./build-env/.version) build-build-env
