@@ -14,11 +14,10 @@ jobs:
       - uses: actions/checkout@v2
       - uses: docker/setup-qemu-action@v1
       - uses: docker/setup-buildx-action@v1
-      - name: docker login
-        run: |
-          cat > ~/.docker/config.json << EOF
-          ${{ secrets.DOCKER_CONFIG }}
-          EOF
+      - uses: docker/login-action@v1
+        with:
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          username: ${{ secrets.DOCKER_USERNAME }}
       - run: make build
   release:
     needs:

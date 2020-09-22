@@ -1,4 +1,26 @@
-FROM morlay/google-gn:9a0496a7 as gn
+FROM debian:buster as gn
+
+RUN set -eux; \
+    \
+    apt-get update; \
+    apt-get install -qqy --no-install-recommends \
+        ca-certificates git \
+        clang python ninja-build \
+        libclang-dev libc++-dev \
+        ; \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /tmp
+
+RUN set -eux; \
+    \
+    git clone https://gn.googlesource.com/gn; \
+    cd gn; \
+    python build/gen.py; \
+    ninja -v -C out; \
+    out/gn_unittests; \
+    mkdir -p /gn; \
+    cp /tmp/gn/out/gn /gn/gn;
 
 FROM debian:buster as hsdis
 
