@@ -16,11 +16,13 @@ RUN set -eux; \
     \
     git clone https://gn.googlesource.com/gn; \
     cd gn; \
+    git checkout 9a0496a7; \
     python build/gen.py; \
     ninja -v -C out; \
     out/gn_unittests; \
     mkdir -p /gn; \
-    cp /tmp/gn/out/gn /gn/gn;
+    cp /tmp/gn/out/gn /gn/gn; \
+    /gn/gn --version;
 
 FROM debian:buster as hsdis
 
@@ -34,8 +36,7 @@ RUN set -eux; \
         automake cmake make autoconf virtualenv \
         python ninja-build g++ \
         openjdk-11-jdk software-properties-common \
-        ; \
-    rm -rf /var/lib/apt/lists/*
+        ;
 
 # build hsdis-<arch>.so
 # see https://metebalci.com/blog/how-to-build-the-hsdis-disassembler-plugin-on-ubuntu-18/
@@ -66,10 +67,21 @@ RUN set -eux; \
     sed -i -e 's/app_data->dfn = disassembler(native_bfd)/app_data->dfn = disassembler(bfd_get_arch(native_bfd),bfd_big_endian(native_bfd),bfd_get_mach(native_bfd),native_bfd)/g' hsdis.c;\
     make all64; \
     \
-    mkdir -p /tmp/hsdis; \
-    cp build/linux-${ARCH}/hsdis-${ARCH}.so /tmp/hsdis; \
-    rm -rf /tmp/jdk; \
-    rm -rf /var/lib/apt/lists/*
+    mkdir -p /hsdis; \
+    cp build/linux-${ARCH}/hsdis-${ARCH}.so /hsdis/hsdis-${ARCH}.so;
+
+# todo switch back official when bazel upgraded to 3.4.0
+FROM busybox AS bazel-bin
+# ADD https://github.com/bazelbuild/bazelisk/releases/download/v1.6.1/bazelisk-linux-amd64 /bazel/bazel
+ADD https://github.com/Tick-Tocker/bazelisk-arm64/releases/download/arm64/bazelisk-linux-arm64 /bazel/bazel
+
+FROM golang:1.15 AS bazel
+
+COPY --from=bazel-bin /bazel/bazel /usr/local/bin/bazel
+
+RUN chmod +x /usr/local/bin/bazel && bazel --version
+RUN go get github.com/bazelbuild/buildtools/buildifier
+RUN go get github.com/bazelbuild/buildtools/buildozer
 
 FROM ubuntu:18.04
 
@@ -101,71 +113,17 @@ RUN set -eux; \
     ; \
     rm -rf /var/lib/apt/lists/*;
 
-## gn
+# bazel
+COPY --from=bazel /usr/local/bin/bazel /usr/local/bin/bazel
+COPY --from=bazel /go/bin/buildifier /usr/local/bin/buildifier
+COPY --from=bazel /go/bin/buildozer /usr/local/bin/buildozer
+
+# gn
 COPY --from=gn /gn/gn /usr/local/bin/gn
-RUN chmod +x /usr/local/bin/gn && gn --version
 
 # hsdis-<arch>.so
-COPY --from=hsdis /tmp/hsdis /tmp/hsdis
-RUN set -eux; \
-    \
-    case $(uname -m) in \
-        x86_64) \
-            export ARCH=amd64; \
-            export TARGETARCH=amd64; \
-        ;; \
-        aarch64) \
-            export ARCH=aarch64; \
-            export TARGETARCH=arm64; \
-        ;; \
-        *) echo "unsupported architecture"; exit 1 ;; \
-    esac; \
-    \
-    mkdir -p /usr/lib/jvm/java-11-openjdk-${TARGETARCH}/lib; \
-    cp /tmp/hsdis/hsdis-${ARCH}.so /usr/lib/jvm/java-11-openjdk-${TARGETARCH}/lib/server/; \
-    cp /tmp/hsdis/hsdis-${ARCH}.so /usr/lib/jvm/java-11-openjdk-${TARGETARCH}/lib/; \
-    rm -rf /tmp/hsdis; 
-
-## go
-ENV GOVERSION=1.14.4
-ENV GOPATH=/root/go  
-
-RUN set -eux; \
-    \
-    case $(uname -m) in \
-        x86_64) \
-            export TARGETARCH=amd64; \
-        ;; \
-        aarch64) \
-            export TARGETARCH=arm64; \
-        ;; \
-        *) echo "unsupported architecture"; exit 1 ;; \
-    esac; \
-    curl -LO https://dl.google.com/go/go${GOVERSION}.linux-${TARGETARCH}.tar.gz; \
-    tar -C /usr/local -xzf go${GOVERSION}.linux-${TARGETARCH}.tar.gz; \
-    rm go${GOVERSION}.linux-${TARGETARCH}.tar.gz;
-
-ENV PATH="/usr/local/go/bin:/root/go/bin:${PATH}"  
-
-## bazel
-RUN set -eux; \
-    \
-    case $(uname -m) in \
-        x86_64) BAZELISK_URL=https://github.com/bazelbuild/bazelisk/releases/download/v1.5.0/bazelisk-linux-amd64;; \
-        aarch64) BAZELISK_URL=https://github.com/Tick-Tocker/bazelisk-arm64/releases/download/arm64/bazelisk-linux-arm64;; \
-        *) echo "unsupported architecture"; exit 1 ;; \
-    esac; \
-    wget -O /usr/local/bin/bazel ${BAZELISK_URL}; \
-    chmod +x /usr/local/bin/bazel; \
-    \
-    go get github.com/bazelbuild/buildtools/buildifier; \
-    export BUILDIFIER_BIN=${GOPATH}/bin/buildifier; \
-    \
-    go get github.com/bazelbuild/buildtools/buildozer; \
-    export BUILDOZER_BIN=${GOPATH}/bin/buildozer; \
-    \
-    rm -rf ${GOPATH}/src 
-
+COPY --from=hsdis /hsdis/* /usr/lib/jvm/java-11-openjdk-${TARGETARCH}/lib/server/
+COPY --from=hsdis /hsdis/* /usr/lib/jvm/java-11-openjdk-${TARGETARCH}/lib/
 
 ENV LLVM_VERSION=9.0.0
 ENV LLVM_PATH=/usr/lib/llvm-9
