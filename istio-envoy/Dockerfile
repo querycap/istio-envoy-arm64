@@ -1,4 +1,4 @@
-FROM querycapistio/istio-envoy-arm64-build-env:482e89d6b9cee8de29f332821ead750d2d38c479 as builder
+FROM querycapistio/istio-envoy-arm64-build-env:0.0.0 as builder
 
 ARG VERSION=1.6.1
 
