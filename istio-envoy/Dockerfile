@@ -11,15 +11,11 @@ RUN git clone --depth 1 -b ${VERSION} https://github.com/istio/proxy /go/src/pro
 
 WORKDIR /go/src/proxy
 
-RUN set -eux; \
-    \
-    export ENVOY_ORG=istio; \
-    \
-    export JAVA_HOME=$(dirname $(dirname $(realpath $(which javac)))); \
-    export BAZEL_BUILD_ARGS="--sandbox_debug --verbose_failures --define=ABSOLUTE_JAVABASE=${JAVA_HOME} --javabase=@bazel_tools//tools/jdk:absolute_javabase --host_javabase=@bazel_tools//tools/jdk:absolute_javabase --java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla"; \
-    make build_envoy; \
-    mkdir -p /envoy; \
-    cp -r bazel-bin/src/envoy/envoy /envoy
+ENV ENVOY_ORG=istio
+
+RUN make build_envoy;
+
+RUN mkdir -p /envoy && cp -r bazel-bin/src/envoy/envoy /envoy
 
 RUN /envoy/envoy --version | grep version | sed -e 's/.*version\: //g' > /envoy/envoy-version
 

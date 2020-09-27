@@ -16,7 +16,7 @@ RUN set -eux; \
     \
     git clone https://gn.googlesource.com/gn; \
     cd gn; \
-    git checkout 9a0496a7; \
+    git checkout 501b49a3; \
     python build/gen.py; \
     ninja -v -C out; \
     out/gn_unittests; \
