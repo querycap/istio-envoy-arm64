@@ -1,10 +1,10 @@
-FROM querycapistio/istio-envoy-arm64-build-env:0.0.0 as builder
+FROM querycapistio/istio-envoy-arm64-build-env:0.1.0 as builder
 
 ARG VERSION=1.6.1
 
 WORKDIR /go/src
 
-RUN gn --version && bazel --version && ninja --version && clang++ --version
+RUN gn --version && ninja --version && clang++ --version
 
 # clone istio/proxy
 RUN git clone --depth 1 -b ${VERSION} https://github.com/istio/proxy /go/src/proxy
