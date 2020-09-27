@@ -1,12 +1,12 @@
 VERSION=$(shell cat istio-envoy/Dockerfile.version | grep "^FROM " | sed -e "s/FROM.*://g" )
 HUB=querycapistio
-TAG=devel
+TAG=$(VERSION)
 
 build:
 	docker buildx build \
 		--push \
 		--build-arg VERSION=$(VERSION) \
-		--tag $(HUB)/istio-envoy-arm64:$(VERSION) \
+		--tag $(HUB)/istio-envoy-arm64:$(TAG) \
 		--platform linux/arm64 \
 		--file istio-envoy/Dockerfile .
 

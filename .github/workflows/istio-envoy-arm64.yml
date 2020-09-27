@@ -2,7 +2,6 @@ name: istio-envoy-arm64
 
 on:
   push:
-    branch: master
     paths:
       - '.github/workflows/istio-envoy-arm64.yml'
       - 'istio-envoy/**'
@@ -18,8 +17,14 @@ jobs:
         with:
           password: ${{ secrets.DOCKER_PASSWORD }}
           username: ${{ secrets.DOCKER_USERNAME }}
-      - run: make build
+      - name: Versioned Build
+        if: github.ref == 'refs/heads/master'
+        run: make build
+      - name: Temp Build
+        if: github.ref != 'refs/heads/master'
+        run: make build TAG=temp-${{ github.sha }}
   release:
+    if: github.ref == 'refs/heads/master'
     needs:
       - build
     runs-on: ubuntu-latest
