@@ -1,1 +1,1 @@
-FROM istio/proxyv2:1.6.11
+FROM istio/proxyv2:1.7.3
