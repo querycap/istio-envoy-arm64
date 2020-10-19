@@ -1,0 +1,41 @@
+name: release
+
+on:
+  workflow_run:
+    workflows: [ istio-envoy-istio-envoy-arm64 ]
+    branches: [ master ]
+    types:
+      - completed
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    defaults:
+      run:
+        working-directory: build/istio-envoy
+    steps:
+      - uses: actions/checkout@v2
+      - id: release
+        run: make release
+      - uses: actions/create-release@v1
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.release.outputs.version }}
+          release_name: Release ${{ steps.release.outputs.version }}
+          body: |
+            **Istio Version**: ${{ steps.release.outputs.version }}
+            **Istio Envoy Expect Version**: ${{ steps.release.outputs.envoy_expect_version }}
+            **Istio Envoy Actual Version**: ${{ steps.release.outputs.envoy_actual_version }}
+          draft: true
+          prerelease: false
+      - uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_name: envoy
+          asset_path: ./envoy/envoy
+          asset_content_type: application/octet-stream

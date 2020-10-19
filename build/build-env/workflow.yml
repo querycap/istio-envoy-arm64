@@ -1,0 +1,3 @@
+runs-on: [ self-hosted, linux, ARM64 ]
+platforms:
+  - linux/arm64

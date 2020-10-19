@@ -1,6 +1,6 @@
-FROM querycapistio/istio-envoy-arm64-build-env:0.1.0 as builder
+FROM ghcr.io/querycap/istio/build-env:0.1.0 as builder
 
-ARG VERSION=1.6.1
+ARG VERSION
 
 WORKDIR /go/src
 

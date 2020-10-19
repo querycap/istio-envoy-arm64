@@ -1,28 +1,7 @@
-VERSION=$(shell cat istio-envoy/Dockerfile.version | grep "^FROM " | sed -e "s/FROM.*://g" )
-HUB=querycapistio
-TAG=devel
+HUB=ghcr.io/querycap/istio docker.io/querycapistio
 
-build:
-	docker buildx build \
-		--push \
-		--build-arg VERSION=$(VERSION) \
-		--tag $(HUB)/istio-envoy-arm64:$(VERSION) \
-		--platform linux/arm64 \
-		--file istio-envoy/Dockerfile .
+gen: install
+	HUB="$(HUB)" go run github.com/querycap/ci-infra/cmd/imagetools
 
-drop-bin:
-	docker cp $(shell docker create $(HUB)/istio-envoy-arm64:$(VERSION)):/envoy/ ${PWD}
-	$(MAKE) set-output
-
-set-output:
-	echo "::set-output name=version::$(VERSION)"
-	echo "::set-output name=envoy_expect_version::$(shell docker run --entrypoint=/usr/local/bin/envoy istio/proxyv2:$(VERSION) --version | grep version | sed -e 's/.*version\: //g')"
-	echo "::set-output name=envoy_actual_version::$(shell cat ./envoy/envoy-version)"
-
-build-build-env:
-	docker buildx build \
-		--push \
-		--build-arg VERSION=$(VERSION) \
-		--tag $(HUB)/istio-envoy-arm64-build-env:${TAG} \
-		--platform linux/arm64 \
-		--file build-env/Dockerfile .
+install:
+	go get github.com/querycap/ci-infra/cmd/imagetools@08c3ef5
